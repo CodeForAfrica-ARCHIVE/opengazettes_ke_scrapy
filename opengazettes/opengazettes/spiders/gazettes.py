@@ -25,7 +25,7 @@ class GazettesSpider(scrapy.Spider):
                     .replace('Vol.', '').replace('-', '').replace(' ', ''))
                 gazette_meta['gazette_number'] = row.xpath('td/a/@href').re(
                     r'No.*.*')[0].replace('No.', '').replace(' ', '')
-                # Add publication data to metadata from table data
+                # Add publication date to metadata from table data
                 gazette_meta['publication_date'] = datetime.strptime(
                     row.xpath('td/text()')[1].extract(), '%d %B,%Y')
                 request = scrapy.Request(gazette_meta['gazette_link'],
@@ -40,7 +40,8 @@ class GazettesSpider(scrapy.Spider):
         item['download_link'] = response.css(
             '.sd a::attr(href)')[1].extract()
         # print(download_link)
-        request = scrapy.Request(item['download_link'], callback=self.download_pdf)
+        request = scrapy.Request(item['download_link'],
+                                 callback=self.download_pdf)
         request.meta['gazette_meta'] = item
         yield request
         # page = response.url.split("/")[-1]

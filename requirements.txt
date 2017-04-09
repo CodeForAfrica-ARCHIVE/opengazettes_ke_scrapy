@@ -2,6 +2,7 @@ appdirs==1.4.3
 asn1crypto==0.22.0
 attrs==16.3.0
 Automat==0.5.0
+boto==2.46.1
 cffi==1.10.0
 constantly==15.1.0
 cryptography==1.8.1
