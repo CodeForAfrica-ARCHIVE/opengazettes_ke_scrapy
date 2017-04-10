@@ -34,23 +34,21 @@ class GazettesSpider(scrapy.Spider):
                 yield request
 
     # Visit individual gazettes links
-    # Find download link and download PDF
+    # Find PDF download link
     def open_single_gazette(self, response):
         item = response.meta['gazette_meta']
         item['download_link'] = response.css(
             '.sd a::attr(href)')[1].extract()
-        # print(download_link)
+
         request = scrapy.Request(item['download_link'],
                                  callback=self.download_pdf)
         request.meta['gazette_meta'] = item
         yield request
-        # page = response.url.split("/")[-1]
-        # filename = 'gazettes-%s.html' % page
-        # with open(filename, 'wb') as f:
-        #     f.write(response.body)
-        # self.log('Saved file %s' % filename)
 
+    # Download PDF gazette using files pipeline
     def download_pdf(self, response):
-        print(response.url)
-        print(response.meta['gazette_meta'])
+        item = response.meta['gazette_meta']
         # Set PDF filename and download to S3
+        # Set file URLs to be downloaded by the files pipeline
+        item['file_urls'] = [item['download_link']]
+        yield item
