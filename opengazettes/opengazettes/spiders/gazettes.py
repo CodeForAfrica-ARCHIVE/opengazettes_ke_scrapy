@@ -8,7 +8,7 @@ import romanify
 class GazettesSpider(scrapy.Spider):
     name = "gazettes"
     allowed_domains = ["kenyalaw.org"]
-    start_urls = ['http://kenyalaw.org/kenya_gazette/gazette/year/2006']
+    start_urls = ['http://kenyalaw.org/kenya_gazette/gazette/year/2007']
 
     def parse(self, response):
         # Extract all gazette links
