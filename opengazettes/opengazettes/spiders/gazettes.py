@@ -48,7 +48,12 @@ class GazettesSpider(scrapy.Spider):
     # Download PDF gazette using files pipeline
     def download_pdf(self, response):
         item = response.meta['gazette_meta']
-        # Set PDF filename and download to S3
+        # Set PDF filename
+        item['filename'] = 'opengazettes-ke-vol-%s-no-%s-dated-%s-%s-%s' % \
+            (item['gazette_volume'], item['gazette_number'],
+                item['publication_date'].strftime("%d"),
+                item['publication_date'].strftime("%B"),
+                item['publication_date'].strftime("%Y"))
         # Set file URLs to be downloaded by the files pipeline
         item['file_urls'] = [item['download_link']]
         yield item

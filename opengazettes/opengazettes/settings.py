@@ -13,8 +13,6 @@ BOT_NAME = 'opengazettes'
 
 SPIDER_MODULES = ['opengazettes.spiders']
 NEWSPIDER_MODULE = 'opengazettes.spiders'
-FILES_STORE = './downloads'
-# FILES_STORE = 's3://cfa-opengazettes-ke/gazettes/'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -29,7 +27,7 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -67,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'opengazettes.files.FilesPipeline': 300,
+   'opengazettes.files.FilesPipeline': True,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

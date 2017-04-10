@@ -17,3 +17,4 @@ class OpengazettesItem(scrapy.Item):
     download_link = scrapy.Field()
     file_urls = scrapy.Field()
     files = scrapy.Field()
+    filename = scrapy.Field()

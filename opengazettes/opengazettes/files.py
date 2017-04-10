@@ -4,7 +4,6 @@ Files Pipeline
 See documentation in topics/media-pipeline.rst
 """
 import functools
-import hashlib
 import os
 import os.path
 import time
@@ -27,7 +26,6 @@ from scrapy.exceptions import NotConfigured, IgnoreRequest
 from scrapy.http import Request
 from scrapy.utils.misc import md5sum
 from scrapy.utils.log import failure_to_exc_info
-from scrapy.utils.python import to_bytes
 from scrapy.utils.request import referer_str
 from scrapy.utils.boto import is_botocore
 from scrapy.utils.datatypes import CaselessDict
@@ -83,8 +81,9 @@ class S3FilesStore(object):
     AWS_ACCESS_KEY_ID = None
     AWS_SECRET_ACCESS_KEY = None
 
-    POLICY = 'private'  # Overriden from settings.FILES_STORE_S3_ACL in
-                        # FilesPipeline.from_settings.
+    # Overriden from settings.FILES_STORE_S3_ACL in
+    # FilesPipeline.from_settings.
+    POLICY = 'private'
     HEADERS = {
         'Cache-Control': 'max-age=172800',
     }
@@ -121,7 +120,8 @@ class S3FilesStore(object):
     def _get_boto_bucket(self):
         # disable ssl (is_secure=False) because of this python bug:
         # http://bugs.python.org/issue5103
-        c = self.S3Connection(self.AWS_ACCESS_KEY_ID, self.AWS_SECRET_ACCESS_KEY, is_secure=False)
+        c = self.S3Connection(self.AWS_ACCESS_KEY_ID,
+                              self.AWS_SECRET_ACCESS_KEY, is_secure=False)
         return c.get_bucket(self.bucket, validate=False)
 
     def _get_boto_key(self, path):
@@ -181,7 +181,7 @@ class S3FilesStore(object):
             'X-Amz-Grant-Read': 'GrantRead',
             'X-Amz-Grant-Read-ACP': 'GrantReadACP',
             'X-Amz-Grant-Write-ACP': 'GrantWriteACP',
-            })
+        })
         extra = {}
         for key, value in six.iteritems(headers):
             try:
@@ -208,8 +208,8 @@ class FilesPipeline(MediaPipeline):
         valid files.
 
     `expired` files are those that pipeline already processed but the last
-        modification was made long time ago, so a reprocessing is recommended to
-        refresh it in case of change.
+        modification was made long time ago, so a reprocessing is recommended
+        to refresh it in case of change.
 
     """
 
@@ -226,7 +226,7 @@ class FilesPipeline(MediaPipeline):
     def __init__(self, store_uri, download_func=None, settings=None):
         if not store_uri:
             raise NotConfigured
-        
+
         if isinstance(settings, dict) or settings is None:
             settings = Settings(settings)
 
@@ -375,11 +375,14 @@ class FilesPipeline(MediaPipeline):
 
     def inc_stats(self, spider, status):
         spider.crawler.stats.inc_value('file_count', spider=spider)
-        spider.crawler.stats.inc_value('file_status_count/%s' % status, spider=spider)
+        spider.crawler.stats.inc_value('file_status_count/%s' %
+                                       status, spider=spider)
 
-    ### Overridable Interface
+    # Overridable Interface
     def get_media_requests(self, item, info):
-        return [Request(x) for x in item.get(self.files_urls_field, [])]
+        return [Request(x, meta={'filename': item["filename"],
+                'publication_date': item["publication_date"]})
+                for x in item.get(self.files_urls_field, [])]
 
     def file_downloaded(self, response, request, info):
         path = self.file_path(request, response=response, info=info)
@@ -395,12 +398,12 @@ class FilesPipeline(MediaPipeline):
         return item
 
     def file_path(self, request, response=None, info=None):
-        ## start of deprecation warning block (can be removed in the future)
+        # start of deprecation warning block (can be removed in the future)
         def _warn():
             from scrapy.exceptions import ScrapyDeprecationWarning
             import warnings
-            warnings.warn('FilesPipeline.file_key(url) method is deprecated, please use '
-                          'file_path(request, response=None, info=None) instead',
+            warnings.warn('FilesPipeline.file_key(url) method is deprecated,\
+            please use file_path(request, response=None, info=None) instead',
                           category=ScrapyDeprecationWarning, stacklevel=1)
 
         # check if called from file_key with url as first argument
@@ -414,11 +417,16 @@ class FilesPipeline(MediaPipeline):
         if not hasattr(self.file_key, '_base'):
             _warn()
             return self.file_key(url)
-        ## end of deprecation warning block
+        # end of deprecation warning block
 
-        media_guid = hashlib.sha1(to_bytes(url)).hexdigest()  # change to request.url after deprecation
-        media_ext = os.path.splitext(url)[1]  # change to request.url after deprecation
-        return 'full/%s%s' % (media_guid, media_ext)
+        # Now using file name passed in the meta data
+        filename = request.meta['filename']
+        # change to request.url after deprecation
+        media_ext = os.path.splitext(url)[1]
+        return '%s/%s/%s%s' % \
+            (request.meta['publication_date'].strftime("%Y"),
+                request.meta['publication_date'].strftime("%m"),
+                filename, media_ext)
 
     # deprecated
     def file_key(self, url):
