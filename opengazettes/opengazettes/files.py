@@ -83,7 +83,7 @@ class S3FilesStore(object):
 
     # Overriden from settings.FILES_STORE_S3_ACL in
     # FilesPipeline.from_settings.
-    POLICY = 'private'
+    POLICY = 'public-read'
     HEADERS = {
         'Cache-Control': 'max-age=172800',
     }
@@ -421,7 +421,6 @@ class FilesPipeline(MediaPipeline):
 
         # Now using file name passed in the meta data
         filename = request.meta['filename']
-        # change to request.url after deprecation
         media_ext = os.path.splitext(url)[1]
         return '%s/%s/%s%s' % \
             (request.meta['publication_date'].strftime("%Y"),
