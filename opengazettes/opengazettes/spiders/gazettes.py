@@ -8,7 +8,14 @@ import romanify
 class GazettesSpider(scrapy.Spider):
     name = "gazettes"
     allowed_domains = ["kenyalaw.org"]
-    start_urls = ['http://kenyalaw.org/kenya_gazette/gazette/year/2007']
+
+    def start_requests(self):
+        # Get the year to be crawled from the arguments
+        # The year is passed like this: scrapy crawl gazettes -a year=2017
+        year = self.year
+        url = 'http://kenyalaw.org/kenya_gazette/gazette/year/%s' % \
+            (year)
+        yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
         # Extract all gazette links
