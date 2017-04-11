@@ -18,11 +18,27 @@ class GazettesSpider(scrapy.Spider):
         yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
-        # Extract all gazette links
-        # Add publication date to metadata from table data
-        rows = response.css('#content tr')
+        # Get all rows in the "Weekly Issues" div
+        weekly_rows = response.xpath('//*[@id="content"]/div[1]/table/tr')
+        # Get all rows in the "Special Issues" div
+        special_rows = response.xpath('//*[@id="content"]/div[2]/table/tr')
+
+        no_of_weekly_issues = len(weekly_rows)
+
+        rows = weekly_rows + special_rows
+        row_counter = 0
         for row in rows:
+            # Immediately increment row_counter
+            row_counter += 1
             gazette_meta = OpengazettesItem()
+
+            # If we have already gone through all weekly, this is special
+            # Otherwise, it is still a weekly issue
+            if row_counter > no_of_weekly_issues:
+                gazette_meta['special_issue'] = True
+            else:
+                gazette_meta['special_issue'] = False
+
             gazette_meta['gazette_link'] = row.xpath(
                 'td/a/@href').extract_first()
             if gazette_meta['gazette_link']:
@@ -55,9 +71,13 @@ class GazettesSpider(scrapy.Spider):
     # Download PDF gazette using files pipeline
     def download_pdf(self, response):
         item = response.meta['gazette_meta']
+        if item['special_issue']:
+            gazette_number = item['gazette_number'] + '-special'
+        else:
+            gazette_number = item['gazette_number']
         # Set PDF filename
         item['filename'] = 'opengazettes-ke-vol-%s-no-%s-dated-%s-%s-%s' % \
-            (item['gazette_volume'], item['gazette_number'],
+            (item['gazette_volume'], gazette_number,
                 item['publication_date'].strftime("%d"),
                 item['publication_date'].strftime("%B"),
                 item['publication_date'].strftime("%Y"))

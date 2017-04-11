@@ -18,3 +18,4 @@ class OpengazettesItem(scrapy.Item):
     file_urls = scrapy.Field()
     files = scrapy.Field()
     filename = scrapy.Field()
+    special_issue = scrapy.Field()
