@@ -13,6 +13,7 @@ BOT_NAME = 'opengazettes'
 
 SPIDER_MODULES = ['opengazettes.spiders']
 NEWSPIDER_MODULE = 'opengazettes.spiders'
+FILES_STORE_S3_ACL = 'public-read'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
