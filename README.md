@@ -22,3 +22,8 @@ It is recommended that you deploy your crawler to scrapinghub for easy managemen
 - Install shub locally using `pip install shub`. Further instructions [here](https://shub.readthedocs.io/en/stable/quickstart.html#installation)
 - `shub login`
 - `shub deploy`
+
+## Installing scrapy-deltafetch on MacOS
+- `export YES_I_HAVE_THE_RIGHT_TO_USE_THIS_BERKELEY_DB_VERSION=1`
+- `BERKELEYDB_DIR=$(brew --cellar)/berkeley-db/6.2.23 pip install bsddb3`
+- `pip install scrapy-deltafetch`

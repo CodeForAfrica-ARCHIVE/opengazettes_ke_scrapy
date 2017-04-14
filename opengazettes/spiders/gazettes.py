@@ -3,11 +3,15 @@ import scrapy
 from datetime import datetime
 from ..items import OpengazettesItem
 import romanify
+# import requests
+# import os
+# import json
 
 
 class GazettesSpider(scrapy.Spider):
     name = "gazettes"
     allowed_domains = ["kenyalaw.org"]
+    # index = requests.get(os.environ.get('HTTP_FEED_URI'))
 
     def start_requests(self):
         # Get the year to be crawled from the arguments
@@ -41,6 +45,7 @@ class GazettesSpider(scrapy.Spider):
 
             gazette_meta['gazette_link'] = row.xpath(
                 'td/a/@href').extract_first()
+
             if gazette_meta['gazette_link']:
                 # Add volume and issue number to metadata from URL
                 gazette_meta['gazette_volume'] = romanify.roman2arabic(
@@ -51,6 +56,15 @@ class GazettesSpider(scrapy.Spider):
                 # Add publication date to metadata from table data
                 gazette_meta['publication_date'] = datetime.strptime(
                     row.xpath('td/text()')[1].extract(), '%d %B,%Y')
+
+                # Check against already crawled gazettes to avoid duplication
+                # for index, line in enumerate(self.index.text.splitlines()):
+                #     gazette = json.loads(line)
+                #     if gazette['gazette_link'] == gazette_meta['gazette_link']:
+                #         print(gazette['gazette_link'])
+                #         print(gazette_meta['gazette_link'])
+                #         yield None
+
                 request = scrapy.Request(gazette_meta['gazette_link'],
                                          callback=self.open_single_gazette)
                 request.meta['gazette_meta'] = gazette_meta
