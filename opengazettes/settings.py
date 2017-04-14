@@ -14,6 +14,7 @@ BOT_NAME = 'opengazettes'
 SPIDER_MODULES = ['opengazettes.spiders']
 NEWSPIDER_MODULE = 'opengazettes.spiders'
 FILES_STORE_S3_ACL = 'public-read'
+DELTAFETCH_ENABLED = True
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -50,8 +51,6 @@ DOWNLOAD_DELAY = 3
 SPIDER_MIDDLEWARES = {
    'scrapy_deltafetch.DeltaFetch': True,
 }
-
-DELTAFETCH_ENABLED = True
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html

@@ -3,9 +3,6 @@ import scrapy
 from datetime import datetime
 from ..items import OpengazettesItem
 import romanify
-# import requests
-# import os
-# import json
 
 
 class GazettesSpider(scrapy.Spider):
@@ -56,14 +53,6 @@ class GazettesSpider(scrapy.Spider):
                 # Add publication date to metadata from table data
                 gazette_meta['publication_date'] = datetime.strptime(
                     row.xpath('td/text()')[1].extract(), '%d %B,%Y')
-
-                # Check against already crawled gazettes to avoid duplication
-                # for index, line in enumerate(self.index.text.splitlines()):
-                #     gazette = json.loads(line)
-                #     if gazette['gazette_link'] == gazette_meta['gazette_link']:
-                #         print(gazette['gazette_link'])
-                #         print(gazette_meta['gazette_link'])
-                #         yield None
 
                 request = scrapy.Request(gazette_meta['gazette_link'],
                                          callback=self.open_single_gazette)
