@@ -8,7 +8,6 @@ import romanify
 class GazettesSpider(scrapy.Spider):
     name = "gazettes"
     allowed_domains = ["kenyalaw.org"]
-    # index = requests.get(os.environ.get('HTTP_FEED_URI'))
 
     def start_requests(self):
         # Get the year to be crawled from the arguments
@@ -59,7 +58,7 @@ class GazettesSpider(scrapy.Spider):
                 request.meta['gazette_meta'] = gazette_meta
                 yield request
 
-    # Visit individual gazettes links
+    # Visit individual gazettes link
     # Find PDF download link
     def open_single_gazette(self, response):
         item = response.meta['gazette_meta']
