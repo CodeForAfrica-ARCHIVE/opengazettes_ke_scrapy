@@ -70,6 +70,10 @@ ITEM_PIPELINES = {
    'opengazettes.pipelines.OpengazettesFilesPipeline': True,
 }
 
+FEED_STORAGES = {
+    's3': 'opengazettes.extensions.feedexport.S3FeedStorage'
+}
+
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True
