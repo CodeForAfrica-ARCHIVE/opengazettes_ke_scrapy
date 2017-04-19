@@ -30,14 +30,21 @@ class S3FeedStorage(BlockingFeedStorage):
     def _store_in_thread(self, file):
         file.seek(0)
         if self.is_botocore:
-            # Get the old object
-            old_file = self.s3_client.get_object(
-                Bucket=self.bucketname, Key=self.keyname)['Body']
-            # Append new data to the end of the old data
-            new_file = old_file.read() + file.read()
-            self.s3_client.put_object(
-                Bucket=self.bucketname, Key=self.keyname, Body=new_file,
-                ACL=self.policy)
+            import botocore.exceptions
+            # Handle non-existent key
+            try:
+                self.s3_client.head_object(Bucket=self.bucketname,
+                                           Key=self.keyname)
+                # Get the old object
+                old_file = self.s3_client.get_object(Bucket=self.bucketname,
+                                                     Key=self.keyname)['Body']
+                # Append new data to the end of the old data
+                new_file = old_file.read() + file.read()
+            except botocore.exceptions.ClientError:
+                new_file = file.read()
+                self.s3_client.put_object(
+                    Bucket=self.bucketname, Key=self.keyname, Body=new_file,
+                    ACL=self.policy)
         else:
             conn = self.connect_s3(self.access_key, self.secret_key)
             bucket = conn.get_bucket(self.bucketname, validate=False)
