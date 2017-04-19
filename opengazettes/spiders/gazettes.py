@@ -86,6 +86,12 @@ class GazettesSpider(scrapy.Spider):
                 item['publication_date'].strftime("%d"),
                 item['publication_date'].strftime("%B"),
                 item['publication_date'].strftime("%Y"))
+        item['gazette_title'] = 'Kenya Government '\
+            'Gazette Vol.%s No.%s Dated %s %s %s' % \
+            (item['gazette_volume'], gazette_number,
+                item['publication_date'].strftime("%d"),
+                item['publication_date'].strftime("%B"),
+                item['publication_date'].strftime("%Y"))
         # Set file URLs to be downloaded by the files pipeline
         item['file_urls'] = [item['download_link']]
         yield item
