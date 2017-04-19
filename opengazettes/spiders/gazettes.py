@@ -44,9 +44,12 @@ class GazettesSpider(scrapy.Spider):
 
             if gazette_meta['gazette_link']:
                 # Add volume and issue number to metadata from URL
+                # Here, we replace l with I to handle human input error
+                # BEWARE: This might cause weird behaviour in future
                 gazette_meta['gazette_volume'] = romanify.roman2arabic(
                     row.xpath('td/a/@href').re(r'Vol.*.*[""|-]')[0]
-                    .replace('Vol.', '').replace('-', '').replace(' ', ''))
+                    .replace('Vol.', '').replace('-', '').replace(' ', '')
+                    .replace('l', 'I'))
                 gazette_meta['gazette_number'] = row.xpath('td/a/@href').re(
                     r'No.*.*')[0].replace('No.', '').replace(' ', '')
                 # Add publication date to metadata from table data
