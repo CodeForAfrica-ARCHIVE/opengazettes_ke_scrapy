@@ -42,9 +42,10 @@ class S3FeedStorage(BlockingFeedStorage):
                 new_file = old_file.read() + file.read()
             except botocore.exceptions.ClientError:
                 new_file = file.read()
-                self.s3_client.put_object(
-                    Bucket=self.bucketname, Key=self.keyname, Body=new_file,
-                    ACL=self.policy)
+
+            self.s3_client.put_object(
+                Bucket=self.bucketname, Key=self.keyname, Body=new_file,
+                ACL=self.policy)
         else:
             conn = self.connect_s3(self.access_key, self.secret_key)
             bucket = conn.get_bucket(self.bucketname, validate=False)
