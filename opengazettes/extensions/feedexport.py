@@ -16,7 +16,7 @@ class S3FeedStorage(BlockingFeedStorage):
         self.secret_key = u.password or settings['AWS_SECRET_ACCESS_KEY']
         self.is_botocore = is_botocore()
         self.keyname = u.path[1:]  # remove first "/"
-        self.policy = 'public-read' or settings['FILES_STORE_S3_ACL']
+        self.policy = settings['FILES_STORE_S3_ACL']
         if self.is_botocore:
             import botocore.session
             session = botocore.session.get_session()
