@@ -12,7 +12,12 @@ class GazettesSpider(scrapy.Spider):
     def start_requests(self):
         # Get the year to be crawled from the arguments
         # The year is passed like this: scrapy crawl gazettes -a year=2017
-        year = self.year
+        # Default to current year if year not passed in
+        try:
+            year = self.year
+        except AttributeError:
+            year = datetime.now().strftime('%Y')
+
         url = 'http://kenyalaw.org/kenya_gazette/gazette/year/%s' % \
             (year)
         yield scrapy.Request(url, callback=self.parse)
