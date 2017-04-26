@@ -67,7 +67,7 @@ SPIDER_MIDDLEWARES = {
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'opengazettes.pipelines.OpengazettesFilesPipeline': True,
+   'opengazettes.pipelines.OpengazettesFilesPipeline': 1,
 }
 
 FEED_STORAGES = {
