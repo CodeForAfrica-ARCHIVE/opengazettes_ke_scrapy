@@ -56,8 +56,9 @@ class GazettesSpider(scrapy.Spider):
                 if not previous_volume_number:
                     gazette_meta['gazette_volume'] = romanify.roman2arabic(
                         row.xpath('td/a/@href')
-                        .re(r'Vol*.*No')[0]
-                        .replace('Vol', '').replace('.', '').replace('-', '')
+                        .re(r'(Vol*.*No)|(VoI*.*No)')[0]
+                        .replace('Vol', '').replace('VoI', '')
+                        .replace('.', '').replace('-', '')
                         .replace(' ', '').replace('l', 'I').replace('No', ''))
 
                     previous_volume_number = gazette_meta['gazette_volume']
@@ -75,7 +76,8 @@ class GazettesSpider(scrapy.Spider):
                 request = scrapy.Request(gazette_meta['gazette_link'],
                                          callback=self.open_single_gazette)
                 request.meta['gazette_meta'] = gazette_meta
-                yield request
+                print(gazette_meta)
+                # yield request
 
     # Visit individual gazettes link
     # Find PDF download link
