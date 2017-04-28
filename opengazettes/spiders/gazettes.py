@@ -56,9 +56,8 @@ class GazettesSpider(scrapy.Spider):
                 if not previous_volume_number:
                     gazette_meta['gazette_volume'] = romanify.roman2arabic(
                         row.xpath('td/a/@href')
-                        .re(r'(Vol*.*No)|(\/ol*.*No)')[0]
-                        .replace('Vol', '').replace('VoI', '')
-                        .replace('\/ol', '').replace('.', '').replace('-', '')
+                        .re(r'Vol*.*No')[0]
+                        .replace('Vol', '').replace('.', '').replace('-', '')
                         .replace(' ', '').replace('l', 'I').replace('No', ''))
 
                     previous_volume_number = gazette_meta['gazette_volume']
@@ -66,7 +65,7 @@ class GazettesSpider(scrapy.Spider):
                     gazette_meta['gazette_volume'] = previous_volume_number
 
                 gazette_meta['gazette_number'] = row.xpath('td/a/@href')\
-                    .re(r'No*.*')[0].replace('No', '').replace('.', '')\
+                    .re(r'No *.*')[0].replace('No', '').replace('.', '')\
                     .replace(' ', '')
 
                 # Add publication date to metadata from table data
