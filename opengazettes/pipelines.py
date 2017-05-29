@@ -29,11 +29,6 @@ class OpengazettesFilesPipeline(FilesPipeline):
             )
             raise FileException('download-error')
 
-        buf = BytesIO(response.body)
-        # Tag files that have errors in them
-        has_error = True if 'A PHP Error was encountered'\
-            in buf.read() else False
-
         if not response.body:
             logger.warning(
                 'File (empty-content): Empty file from %(request)s referred '
@@ -71,6 +66,13 @@ class OpengazettesFilesPipeline(FilesPipeline):
                 exc_info=True, extra={'spider': info.spider}
             )
             raise FileException(str(exc))
+
+        # Make sure this has a default value
+        has_error = False
+        buf = BytesIO(response.body)
+        # Tag files that have errors in them
+        if 'A PHP Error was encountered' in buf.read():
+            has_error = True
 
         return {'url': request.url, 'path': path, 'checksum': checksum,
                 'has_error': has_error}
