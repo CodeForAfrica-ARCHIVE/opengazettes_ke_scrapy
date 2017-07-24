@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import scrapy
 
 from scrapy.spidermiddlewares.httperror import HttpError
@@ -138,7 +139,7 @@ class GazettesSpider(scrapy.Spider):
 
     def errback(self, failure):
         self.logger.error(repr(failure))
-        webhook_url = 'https://hooks.slack.com/services/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'
+        webhook_url = os.environ['webhook']
         if failure.check(HttpError):
             # these exceptions come from HttpError spider middleware
             # you can get the non-200 response
