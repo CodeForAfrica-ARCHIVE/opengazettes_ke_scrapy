@@ -139,7 +139,7 @@ class GazettesSpider(scrapy.Spider):
 
     def errback(self, failure):
         self.logger.error(repr(failure))
-        webhook_url = os.environ['webhook']
+        webhook_url = os.getenv('WEB_HOOK')
         if failure.check(HttpError):
             # these exceptions come from HttpError spider middleware
             # you can get the non-200 response
