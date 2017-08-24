@@ -20,7 +20,6 @@ class GazettesSpider(scrapy.Spider):
         
     name = "gazettes"
     allowed_domains = ["kenyalaw.org"]
-    webhook_url = 'https://hooks.slack.com/services/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'
 
     def start_requests(self):
         # Get the year to be crawled from the arguments
@@ -31,7 +30,7 @@ class GazettesSpider(scrapy.Spider):
         except AttributeError:
             year = datetime.now().strftime('%Y')
         
-        url = 'http://kenylaw.org/kenya_gazette/gazette/year/%s' % \
+        url = 'http://kenyalaw.org/kenya_gazette/gazette/year/%s' % \
             (year)
         yield scrapy.Request(url, callback=self.parse, errback=self.errback, dont_filter=True)
 
@@ -115,7 +114,7 @@ class GazettesSpider(scrapy.Spider):
     
 
     def notification(self, error_name, message):
-        #webhook_url = os.getenv('WEB_HOOK')
+        webhook_url = os.getenv('WEB_HOOK')
         webhook_url = 'https://hooks.slack.com/services/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'
         slack_data = {
                         "attachments":
