@@ -1,11 +1,23 @@
 # -*- coding: utf-8 -*-
+import os
 import scrapy
+
+from scrapy.spidermiddlewares.httperror import HttpError
+from twisted.internet.error import DNSLookupError
+from twisted.internet.error import TimeoutError, TCPTimedOutError
+
 from datetime import datetime
+import time
+import getpass
 from ..items import OpengazettesItem
 import romanify
+from scrapy import signals
+import requests
+import json
 
 
 class GazettesSpider(scrapy.Spider):
+        
     name = "gazettes"
     allowed_domains = ["kenyalaw.org"]
 
@@ -17,18 +29,35 @@ class GazettesSpider(scrapy.Spider):
             year = self.year
         except AttributeError:
             year = datetime.now().strftime('%Y')
-
+        
         url = 'http://kenyalaw.org/kenya_gazette/gazette/year/%s' % \
             (year)
-        yield scrapy.Request(url, callback=self.parse)
+        yield scrapy.Request(url, callback=self.parse, errback=self.errback, dont_filter=True)
+
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(GazettesSpider, cls).from_crawler(crawler, *args, **kwargs)
+        return spider
+
 
     def parse(self, response):
+        # try:
         # Get all rows in the "Weekly Issues" div
-        weekly_rows = response.xpath('//*[@id="content"]/div[1]/table/tr')
+        weekly_issue_div = '//*[@id="content"]/div[1]/table/tr'
+        special_rows_div = '//*[@id="content"]/div[2]/table/tr'
+
+        weekly_rows = response.xpath(weekly_issue_div)
         # Get all rows in the "Special Issues" div
-        special_rows = response.xpath('//*[@id="content"]/div[2]/table/tr')
+        special_rows = response.xpath(special_rows_div)
 
         no_of_weekly_issues = len(weekly_rows)
+        if special_rows == 0 or no_of_weekly_issues == 0:
+            error_name = "PAGE STRUCTURE ERROR"
+            message = "Spider failure caused by error on current page structures."\
+                       + "\n Weekly issue as %s \n Special issue as %s" % \
+                       (weekly_issue_div, special_rows_div)
+            self.notification(error_name, message)
 
         rows = weekly_rows + special_rows
         row_counter = 0
@@ -74,9 +103,96 @@ class GazettesSpider(scrapy.Spider):
                     row.xpath('td/text()')[1].extract(), '%d %B,%Y')
 
                 request = scrapy.Request(gazette_meta['gazette_link'],
-                                         callback=self.open_single_gazette)
+                                        callback=self.open_single_gazette)
                 request.meta['gazette_meta'] = gazette_meta
                 yield request
+
+
+    def domains(self):
+        for domain in self.allowed_domains:
+            return domain
+    
+
+    def notification(self, error_name, message):
+        webhook_url = os.getenv('WEB_HOOK')
+        webhook_url = 'https://hooks.slack.com/services/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'
+        slack_data = {
+                        "attachments":
+                            [
+                                {
+                                    "author_name": self.name,
+                                    "color": "danger",
+                                    "pretext": "[SCRAPER] New Alert for failing scrapers",
+                                    "fields": [
+                                        {
+                                            "title": error_name,
+                                            "value": message,
+                                            "short": False
+                                            },
+                                            {
+                                            "title": "Failing Domains",
+                                            "value": self.domains(),
+                                            "short": False
+                                            },
+                                            {
+                                            "title": "Machine Location",
+                                            "value": "{}".format(getpass.getuser()),
+                                            "short": True
+                                            },
+                                            {
+                                            "title": "Time",
+                                            "value": str(time.ctime()),
+                                            "short": True
+                                            },
+                                        ],
+                                    }
+                                ]
+                        }
+        response = requests.post(
+            webhook_url, data=json.dumps(slack_data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+
+
+    def errback(self, failure):
+        self.logger.error(repr(failure))
+        if failure.check(HttpError):
+            # these exceptions come from HttpError spider middleware
+            error_name = 'HttpError'
+            message = "Spider failure caused by exceptions from HttpError spider middleware due to non-200 response " \
+                    + "on the request url %s"  % failure.request.url
+            print ("SCRAPPER ERROR MESSAGE",failure.__dict__)
+
+            self.notification(error_name, message)
+
+            response = failure.value.response
+            self.logger.error('HttpError on %s', response.url)
+
+        elif failure.check(DNSLookupError):
+            # these exceptions come from DNSLookupError spider middleware
+            error_name = 'DNSLookupError'
+            message = 'Spider failure caused by exceptions from DNSLookupError spider middleware '\
+                    + "on the request url %s"  % failure.request.url
+            print ("SCRAPPER ERROR MESSAGE",failure.__dict__)
+            
+            self.notification(error_name, message)
+            
+            response = failure.value.response
+            self.logger.error('DNSLookUpError on %s', response.url)
+
+            
+        elif failure.check(TimeoutError, TCPTimedOutError):
+            # these exceptions come from TCPTimeOutError spider middleware
+            error_name = 'TCPTimedOutError'
+            message = "Spider failure caused by exceptions from TCPTimedOutError spider middleware %s" \
+                    + "on the request url %s"  % failure.request.url
+
+            self.notification(error_name, message)
+            
+            request = failure.request
+            self.logger.error('TimeoutError on %s', request.url)
+
 
     # Visit individual gazettes link
     # Find PDF download link
@@ -112,3 +228,4 @@ class GazettesSpider(scrapy.Spider):
         # Set file URLs to be downloaded by the files pipeline
         item['file_urls'] = [item['download_link']]
         yield item
+    
